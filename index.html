@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Brawl Stars Farm Manager | Pro</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        body {
+            background: #1a2632;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 12px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .table-view { display: none; }
+            .card-view { display: flex; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-group { flex-wrap: wrap; justify-content: center; }
+        }
+        @media (min-width: 769px) {
+            .table-view { display: block; }
+            .card-view { display: none; }
+        }
+        .card-view {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .account-card {
+            background: #0f1724;
+            border-radius: 16px;
+            padding: 12px;
+            border: 1px solid #2d3e50;
+            position: relative;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .card-nick { font-weight: bold; font-size: 1.1rem; word-break: break-word; }
+        .card-type { background: #2a4b6e; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; }
+        .card-email { font-size: 0.75rem; color: #b0c4de; margin-bottom: 8px; word-break: break-all; }
+        .card-status { margin-bottom: 6px; font-size: 0.85rem; }
+        .card-timer { font-family: monospace; font-size: 1rem; margin-bottom: 10px; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .card-checkbox { position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; }
+        .card, .section, .modal-content { background: #0f1724; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #2d3e50; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .toolbar-group { display: flex; gap: 8px; background: #0a111c; padding: 6px 10px; border-radius: 40px; flex-wrap: wrap; }
+        button, .btn { background: #2a4b6e; border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 0.8rem; transition: 0.1s; }
+        button:hover, .btn:hover { background: #3e6a8c; transform: scale(0.97); }
+        .btn-small { padding: 4px 8px; font-size: 0.7rem; }
+        .btn-danger { background: #8a4a3a; }
+        .btn-danger:hover { background: #a85e4a; }
+        .btn-reset { background: #4a5568; }
+        input, select { background: #1e2a3a; border: 1px solid #3a4a5e; padding: 6px 10px; border-radius: 20px; color: #f0f4fa; outline: none; }
+        input:focus, select:focus { border-color: #6a9ec4; }
+        .section-header { background: #0f1724; padding: 10px; cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid #2d3e50; }
+        .section-header:hover { background: #16212e; }
+        .section-content { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; table-layout: fixed; }
+        th, td { padding: 8px 4px; border-bottom: 1px solid #1e2a36; vertical-align: middle; }
+        th { background: #0a111c; color: #bdd4e7; }
+        .checkbox-col { width: 30px; text-align: center; }
+        .timer-cell { font-family: monospace; white-space: nowrap; }
+        .status-warning { color: #f9a65a; background: #332411; border-radius: 12px; padding: 2px 6px; display: inline-block; }
+        .status-available { color: #7bcea4; }
+        .status-cooldown { color: #d8b48c; }
+        .editable { cursor: pointer; border-radius: 4px; padding: 2px 4px; }
+        .editable:hover { background: #1e2a36; }
+        .action-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .close-modal { float: right; font-size: 1.5rem; cursor: pointer; line-height: 1; }
+        .form-row { margin-bottom: 12px; }
+        textarea { width: 100%; background: #1e2a3a; border: 1px solid #3a4a5e; border-radius: 12px; padding: 8px; color: white; resize: vertical; }
+        .hotkeys { font-size: 0.65rem; background: #0a111c; padding: 4px 10px; border-radius: 16px; }
+        .footer { font-size: 0.7rem; text-align: center; margin-top: 20px; color: #7e8e9e; }
+        .warning-text { background: #332411; padding: 8px; border-radius: 12px; color: #f9a65a; }
+        .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        th:nth-child(1) { width: 30px; }
+        th:nth-child(2) { width: 20%; }
+        th:nth-child(3) { width: 25%; }
+        th:nth-child(4) { width: 15%; }
+        th:nth-child(5) { width: 25%; }
+        th:nth-child(6) { width: 20%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div style="margin-bottom: 16px;">
+        <h1 style="font-size: 1.4rem;">BRAWL STARS FARM MANAGER</h1>
+        <div style="font-size: 0.7rem;">Учёт аккаунтов | Таймеры | Отмена/повтор (Ctrl+Z / Ctrl+Y)</div>
+    </div>
+
+    <div class="card">
+        <div class="toolbar">
+            <div class="toolbar-group"><button id="openAddModalBtn">+ Аккаунт</button><button id="openMassAddModalBtn" class="btn-reset">+ Массово</button><select id="profileSelect" style="width: auto;"></select><button id="newProfileBtn" class="btn-small">Новый профиль</button><button id="delProfileBtn" class="btn-small btn-danger">Удалить профиль</button></div>
+            <div class="toolbar-group"><button id="exportJsonBtn">JSON</button><button id="importCsvBtn">CSV</button><button id="backupBtn">Резерв</button><button id="saveHtmlBtn">HTML</button><input type="file" id="importFileInput" style="display:none" accept=".json,.csv"></div>
+            <div class="toolbar-group"><button id="openStatsBtn">Статистика</button><button id="openHistoryBtn">История</button><button id="openCalendarBtn">Календарь</button><button id="openSortModalBtn">Сортировка</button><button id="openMassEditBtn">Массовое редактирование</button><button id="openSchedulerBtn">Планировщик</button></div>
+            <div class="toolbar-group"><input type="text" id="searchInput" placeholder="Поиск" style="width:140px"><select id="statusFilter"><option value="all">Все</option><option value="available">Доступные</option><option value="cooldown">На КД</option></select><label class="checkbox-label"><input type="checkbox" id="muteCheckbox">🔇</label><button id="enableNotificationsBtn" class="btn-small">Уведомления</button></div>
+            <div class="toolbar-group"><button id="undoBtn" class="btn-small" title="Ctrl+Z">↩️ Отменить</button><button id="redoBtn" class="btn-small" title="Ctrl+Y">↪️ Повторить</button><button id="deleteSelectedBtn" class="btn-small btn-danger">🗑️ Удалить выбранные</button></div>
+        </div>
+    </div>
+
+    <div class="table-view">
+        <div class="section"><div class="section-header" data-section="high"><span><strong>ХАИ</strong> (второй прайм, кулдаун 3ч) — <span id="highCount">0</span></span><span>▼</span></div><div class="section-content" id="highContent"><table><thead><tr><th class="checkbox-col">✔</th><th>Ник</th><th>Почта / заметка</th><th>Статус</th><th>Осталось КД</th><th>Действия</th></tr></thead><tbody id="highTableBody"></tbody></table></div></div>
+        <div class="section"><div class="section-header" data-section="low"><span><strong>ЛОУ</strong> (300+ кубков, кулдаун 30 мин) — <span id="lowCount">0</span></span><span>▼</span></div><div class="section-content" id="lowContent"><table><thead><tr><th class="checkbox-col">✔</th><th>Ник</th><th>Почта / заметка</th><th>Статус</th><th>Осталось КД</th><th>Действия</th></tr></thead><tbody id="lowTableBody"></tbody></table></div></div>
+    </div>
+
+    <div id="cardView" class="card-view"></div>
+
+    <div class="card" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between;">
+        <div><button id="massUseBtn" class="btn-small">Запустить КД выбранным</button><button id="massResetBtn" class="btn-small btn-reset">Сбросить КД выбранным</button><button id="selectAllBtn" class="btn-small">Выбрать всех</button><button id="deselectAllBtn" class="btn-small">Снять всех</button></div>
+        <div class="hotkeys">Ctrl+F — поиск | Ctrl+N — добавить | Ctrl+Z — отменить | Ctrl+Y — повторить | F1 — справка</div>
+    </div>
+    <div class="footer">Клик по нику или почте для редактирования. При окончании кулдауна уведомление (звук можно отключить).</div>
+</div>
+
+<!-- Модальные окна -->
+<div id="addModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="addModal">&times;</span><h3>Добавление аккаунта</h3></div><div class="form-row"><label>Тип</label><select id="newType"><option value="high">Хай (2 прайм)</option><option value="low">Лоу (300+ кубков)</option></select></div><div class="form-row"><label>Ник (обязательно)</label><input type="text" id="newNick" placeholder="например: shelly_farmer"></div><div class="form-row"><label>Почта / заметка (опционально)</label><input type="text" id="newEmail" placeholder="почта или пометка"></div><div style="display: flex; justify-content: flex-end; gap: 10px;"><button id="addAccountBtn" class="btn">Добавить</button><button class="btn btn-reset" data-modal="addModal">Отмена</button></div></div></div>
+<div id="massAddModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="massAddModal">&times;</span><h3>Массовое добавление аккаунтов</h3></div><div class="form-row"><label>Тип (для всех)</label><select id="massType"><option value="high">Хай (2 прайм)</option><option value="low">Лоу (300+ кубков)</option></select></div><div class="form-row"><label>Ники (через пробел)</label><textarea id="massNicks" rows="3" placeholder="acc1 acc2 acc3"></textarea></div><div class="form-row"><label>Почты или пароли (через пробел, формат email:password)</label><textarea id="massEmails" rows="3" placeholder="mail1:pass1 mail2:pass2 mail3@mail.com"></textarea></div><button id="massAddBtn" class="btn">Добавить все</button></div></div>
+<div id="statsModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="statsModal">&times;</span><h3>Статистика фермы</h3></div><div class="form-row"><label>Кубков за победу</label><select id="trophiesPerWin"><option value="8">8 (3v3)</option><option value="10">10</option><option value="12">12 (5v5)</option></select></div><div id="statsContent"></div></div></div>
+<div id="historyModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="historyModal">&times;</span><h3>История действий</h3></div><div id="historyContent" style="max-height: 400px; overflow-y: auto;"></div></div></div>
+<div id="calendarModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="calendarModal">&times;</span><h3>Календарь освобождения (ближайшие 24ч)</h3></div><div id="calendarContent"></div></div></div>
+<div id="sortModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="sortModal">&times;</span><h3>Сортировка внутри секций</h3></div><div class="form-row"><label>Сортировка хаев:</label><select id="sortHighSelect"><option value="nick">По нику</option><option value="cd">По остатку КД (возрастание)</option><option value="status">По статусу (доступные сверху)</option></select></div><div class="form-row"><label>Сортировка лоу:</label><select id="sortLowSelect"><option value="nick">По нику</option><option value="cd">По остатку КД</option><option value="status">По статусу</option></select></div><button id="applySortBtn" class="btn">Применить</button></div></div>
+<div id="massEditModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="massEditModal">&times;</span><h3>Массовое редактирование почт</h3></div><div class="form-row"><label>Добавить суффикс к почте ВСЕХ выбранных аккаунтов:</label><input type="text" id="emailSuffix" placeholder="например: +alias или @temp.com"></div><button id="applySuffixBtn" class="btn-small">Применить суффикс к выбранным</button><hr><div class="form-row"><label>Заменить почту у выбранных на указанную:</label><input type="text" id="emailReplace" placeholder="новая почта"></div><button id="applyReplaceBtn" class="btn-small">Заменить почту выбранным</button></div></div>
+<div id="schedulerModal" class="modal"><div class="modal-content"><div class="modal-header"><span class="close-modal" data-modal="schedulerModal">&times;</span><h3>Планировщик сессий (напоминания)</h3></div><div class="form-row"><label>Через сколько минут напомнить?</label><input type="number" id="reminderMinutes" value="30" min="1" max="1440"></div><div class="form-row"><label>Сообщение</label><input type="text" id="reminderMessage" value="Пора запустить сессию аккаунтов!"></div><button id="setReminderBtn" class="btn">Установить напоминание</button><button id="clearReminderBtn" class="btn btn-reset">Отменить напоминание</button><div id="reminderStatus" style="margin-top: 12px; font-size: 0.8rem;"></div></div></div>
+
+<script>
+// Часть 2: скрипты (следуют в следующем сообщении)
+// -------------------------- ПОЛНАЯ ЛОГИКА ПРИЛОЖЕНИЯ --------------------------
+    // ---------- КОНФИГУРАЦИЯ ----------
+    const COOLDOWN = { high: 3 * 60 * 60 * 1000, low: 30 * 60 * 1000 };
+    const WARNING_THRESHOLD = { high: 30 * 60 * 1000, low: 5 * 60 * 1000 };
+    let accounts = [];
+    let currentProfile = "default";
+    let profiles = {};
+    let searchQuery = "";
+    let collapsedSections = { high: false, low: false };
+    let selectedIds = new Set();
+    let notificationsEnabled = false;
+    let soundMuted = false;
+    let audioCtx = null;
+    let lastNotified = {};
+    let historyLog = [];
+    let sortRules = { high: "nick", low: "nick" };
+    let statusFilter = "all";
+    let reminderTimeout = null;
+    
+    // Undo/Redo стеки (храним копии accounts и дополнительных параметров)
+    let undoStack = [];
+    let redoStack = [];
+    let isUndoRedo = false;
+    
+    // DOM элементы
+    const highTbody = document.getElementById("highTableBody");
+    const lowTbody = document.getElementById("lowTableBody");
+    const highCountSpan = document.getElementById("highCount");
+    const lowCountSpan = document.getElementById("lowCount");
+    const searchInput = document.getElementById("searchInput");
+    const profileSelect = document.getElementById("profileSelect");
+    const statusFilterSelect = document.getElementById("statusFilter");
+    const muteCheckbox = document.getElementById("muteCheckbox");
+    const cardViewDiv = document.getElementById("cardView");
+    
+    // ---------- Сохранение состояния для undo/redo ----------
+    function pushToUndo() {
+        if (isUndoRedo) return;
+        undoStack.push({
+            accounts: JSON.parse(JSON.stringify(accounts)),
+            selectedIds: Array.from(selectedIds),
+            historyLog: JSON.parse(JSON.stringify(historyLog)),
+            currentProfile: currentProfile,
+            profiles: JSON.parse(JSON.stringify(profiles))
+        });
+        redoStack = [];
+        if (undoStack.length > 50) undoStack.shift();
+    }
+    
+    function undo() {
+        if (undoStack.length === 0) return;
+        isUndoRedo = true;
+        const prev = undoStack.pop();
+        redoStack.push({
+            accounts: JSON.parse(JSON.stringify(accounts)),
+            selectedIds: Array.from(selectedIds),
+            historyLog: JSON.parse(JSON.stringify(historyLog)),
+            currentProfile: currentProfile,
+            profiles: JSON.parse(JSON.stringify(profiles))
+        });
+        accounts = prev.accounts;
+        selectedIds = new Set(prev.selectedIds);
+        historyLog = prev.historyLog;
+        currentProfile = prev.currentProfile;
+        profiles = prev.profiles;
+        if (!profiles[currentProfile]) profiles[currentProfile] = [];
+        saveProfilesImmediate();
+        renderAll();
+        addLog("Отмена", "Возврат к предыдущему состоянию");
+        isUndoRedo = false;
+    }
+    
+    function redo() {
+        if (redoStack.length === 0) return;
+        isUndoRedo = true;
+        const next = redoStack.pop();
+        undoStack.push({
+            accounts: JSON.parse(JSON.stringify(accounts)),
+            selectedIds: Array.from(selectedIds),
+            historyLog: JSON.parse(JSON.stringify(historyLog)),
+            currentProfile: currentProfile,
+            profiles: JSON.parse(JSON.stringify(profiles))
+        });
+        accounts = next.accounts;
+        selectedIds = new Set(next.selectedIds);
+        historyLog = next.historyLog;
+        currentProfile = next.currentProfile;
+        profiles = next.profiles;
+        if (!profiles[currentProfile]) profiles[currentProfile] = [];
+        saveProfilesImmediate();
+        renderAll();
+        addLog("Повтор", "Возврат отменённого действия");
+        isUndoRedo = false;
+    }
+    
+    // ---------- Логирование и авторезерв ----------
+    function addLog(action, details) {
+        historyLog.unshift({ time: new Date().toLocaleString(), action, details });
+        if (historyLog.length > 200) historyLog.pop();
+        localStorage.setItem("brawl_history", JSON.stringify(historyLog));
+        backupDataAuto();
+    }
+    
+    function backupDataAuto() {
+        const backup = {
+            accounts, currentProfile, profiles, sortRules, collapsedSections, historyLog, timestamp: Date.now()
+        };
+        localStorage.setItem("brawl_auto_backup", JSON.stringify(backup));
+    }
+    
+    function restoreAutoBackup() {
+        const raw = localStorage.getItem("brawl_auto_backup");
+        if (raw) {
+            try {
+                const b = JSON.parse(raw);
+                if (b.accounts && b.profiles) {
+                    accounts = b.accounts;
+                    currentProfile = b.currentProfile || "default";
+                    profiles = b.profiles;
+                    sortRules = b.sortRules || { high: "nick", low: "nick" };
+                    collapsedSections = b.collapsedSections || { high: false, low: false };
+                    historyLog = b.historyLog || [];
+                    return true;
+                }
+            } catch(e) {}
+        }
+        return false;
+    }
+    
+    function manualBackup() {
+        const backup = { accounts, currentProfile, profiles, sortRules, collapsedSections, historyLog, timestamp: Date.now() };
+        const data = JSON.stringify(backup, null, 2);
+        const blob = new Blob([data], {type: "application/json"});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `brawl_backup_${new Date().toISOString().slice(0,19)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        addLog("Резервное копирование", "Создан ручной бэкап");
+    }
+    
+    // ---------- Профили ----------
+    function saveProfilesImmediate() {
+        localStorage.setItem("brawl_profiles", JSON.stringify(profiles));
+        localStorage.setItem("brawl_current_profile", currentProfile);
+        backupDataAuto();
+    }
+    
+    function saveProfiles() {
+        pushToUndo();
+        saveProfilesImmediate();
+    }
+    
+    function loadProfiles() {
+        const raw = localStorage.getItem("brawl_profiles");
+        if (raw) profiles = JSON.parse(raw);
+        if (Object.keys(profiles).length === 0) { profiles.default = []; }
+        currentProfile = localStorage.getItem("brawl_current_profile") || "default";
+        if (!profiles[currentProfile]) currentProfile = "default";
+        accounts = profiles[currentProfile] || [];
+        const savedHistory = localStorage.getItem("brawl_history");
+        if (savedHistory) historyLog = JSON.parse(savedHistory);
+        else historyLog = [];
+        if (accounts.length === 0) restoreAutoBackup();
+    }
+    
+    function updateProfileSelect() {
+        profileSelect.innerHTML = "";
+        for (let p in profiles) {
+            let opt = document.createElement("option");
+            opt.value = p;
+            opt.textContent = p + (p === currentProfile ? " (текущий)" : "");
+            if (p === currentProfile) opt.selected = true;
+            profileSelect.appendChild(opt);
+        }
+    }
+    
+    function switchProfile(profileName) {
+        if (!profiles[profileName]) profiles[profileName] = [];
+        pushToUndo();
+        accounts = profiles[profileName];
+        currentProfile = profileName;
+        selectedIds.clear();
+        saveProfilesImmediate();
+        renderAll();
+        addLog("Переключение профиля", `На ${profileName}`);
+    }
+    
+    function saveCurrentProfile() {
+        pushToUndo();
+        profiles[currentProfile] = accounts;
+        saveProfilesImmediate();
+    }
+    
+    // ---------- Основные методы ----------
+    function getRemainingMs(acc) { if (!acc.cooldownUntil) return 0; let r = acc.cooldownUntil - Date.now(); return r > 0 ? r : 0; }
+    function formatTime(ms) {
+        if (ms <= 0) return "Готов";
+        let h = Math.floor(ms / 3600000); let m = Math.floor((ms % 3600000) / 60000); let s = Math.floor((ms % 60000) / 1000);
+        return h ? `${h}ч ${m}м ${s}с` : m ? `${m}м ${s}с` : `${s}с`;
+    }
+    function isWarning(acc) { let r = getRemainingMs(acc); if (r <= 0) return false; let thr = acc.type === "high" ? WARNING_THRESHOLD.high : WARNING_THRESHOLD.low; return r <= thr; }
+    
+    function useAccount(id) {
+        let acc = accounts.find(a => a.id === id);
+        if (!acc) return;
+        pushToUndo();
+        acc.cooldownUntil = Date.now() + COOLDOWN[acc.type];
+        addLog("Использован", `${acc.nick} (${acc.type === "high" ? "Хай" : "Лоу"}) КД запущен`);
+        saveProfilesImmediate(); renderAll(); selectedIds.delete(id);
+    }
+    
+    function resetCooldown(id) {
+        let acc = accounts.find(a => a.id === id);
+        if (acc) {
+            pushToUndo();
+            acc.cooldownUntil = null;
+            addLog("Сброс КД", `${acc.nick} - ручной сброс`);
+            saveProfilesImmediate(); renderAll();
+        }
+    }
+    
+    function deleteAccount(id) {
+        if (!confirm("Удалить аккаунт?")) return;
+        let acc = accounts.find(a => a.id === id);
+        pushToUndo();
+        addLog("Удаление", `${acc.nick} удалён`);
+        accounts = accounts.filter(a => a.id !== id);
+        selectedIds.delete(id);
+        saveProfilesImmediate(); renderAll();
+    }
+    
+    function addAccountFromModal() {
+        let type = document.getElementById("newType").value;
+        let nick = document.getElementById("newNick").value.trim();
+        let email = document.getElementById("newEmail").value.trim();
+        if (!nick) { alert("Введите ник"); return; }
+        pushToUndo();
+        accounts.push({ id: crypto.randomUUID(), type, nick, email, cooldownUntil: null });
+        addLog("Добавление", `${nick} (${type === "high" ? "Хай" : "Лоу"})`);
+        saveProfilesImmediate(); renderAll();
+        document.getElementById("newNick").value = "";
+        document.getElementById("newEmail").value = "";
+        closeModal("addModal");
+    }
+    
+    function massAddAccounts() {
+        let type = document.getElementById("massType").value;
+        let nicksRaw = document.getElementById("massNicks").value.trim();
+        let emailsRaw = document.getElementById("massEmails").value.trim();
+        if (!nicksRaw) { alert("Введите ники"); return; }
+        let nicks = nicksRaw.split(/\s+/).filter(n => n.length > 0);
+        let emails = emailsRaw.split(/\s+/).filter(e => e.length > 0);
+        if (nicks.length !== emails.length) {
+            alert(`Количество ников (${nicks.length}) не совпадает с количеством почт (${emails.length})`);
+            return;
+        }
+        pushToUndo();
+        let added = 0;
+        for (let i = 0; i < nicks.length; i++) {
+            accounts.push({ id: crypto.randomUUID(), type, nick: nicks[i], email: emails[i], cooldownUntil: null });
+            added++;
+        }
+        addLog("Массовое добавление", `Добавлено ${added} аккаунтов типа ${type === "high" ? "Хай" : "Лоу"}`);
+        saveProfilesImmediate(); renderAll();
+        document.getElementById("massNicks").value = "";
+        document.getElementById("massEmails").value = "";
+        closeModal("massAddModal");
+        alert(`Добавлено ${added} аккаунтов`);
+    }
+    
+    function editField(acc, field) {
+        let newVal = prompt(`Введите новое значение для ${field === "nick" ? "ника" : "почты"}:`, acc[field]);
+        if (newVal !== null && newVal.trim() !== "") {
+            pushToUndo();
+            acc[field] = newVal.trim();
+            addLog("Редактирование", `${acc.nick}: ${field} изменён`);
+            saveProfilesImmediate(); renderAll();
+        }
+    }
+    
+    function massUseSelected() {
+        let changed = false;
+        for (let id of selectedIds) {
+            let acc = accounts.find(a => a.id === id);
+            if (acc && getRemainingMs(acc) === 0) {
+                if (!changed) pushToUndo();
+                acc.cooldownUntil = Date.now() + COOLDOWN[acc.type];
+                changed = true;
+            }
+        }
+        if (changed) { saveProfilesImmediate(); renderAll(); addLog("Массовое использование", `Выбрано ${selectedIds.size} акков`); } else alert("Нет доступных выбранных аккаунтов");
+    }
+    
+    function massResetSelected() {
+        let changed = false;
+        for (let id of selectedIds) {
+            let acc = accounts.find(a => a.id === id);
+            if (acc && acc.cooldownUntil !== null) {
+                if (!changed) pushToUndo();
+                acc.cooldownUntil = null;
+                changed = true;
+            }
+        }
+        if (changed) { saveProfilesImmediate(); renderAll(); addLog("Массовый сброс КД", `Сброшено ${selectedIds.size} акков`); }
+        else alert("Нет выбранных аккаунтов с активным КД");
+    }
+    
+    function selectAll() { accounts.forEach(a => selectedIds.add(a.id)); renderAll(); }
+    function deselectAll() { selectedIds.clear(); renderAll(); }
+    
+    function deleteSelected() {
+        if (selectedIds.size === 0) { alert("Нет выбранных аккаунтов"); return; }
+        if (!confirm(`Удалить ${selectedIds.size} выбранных аккаунтов?`)) return;
+        pushToUndo();
+        accounts = accounts.filter(a => !selectedIds.has(a.id));
+        selectedIds.clear();
+        saveProfilesImmediate();
+        renderAll();
+        addLog("Удаление выбранных", `Удалено ${selectedIdsDeleteCount} аккаунтов`);
+    }
+    
+    // Сортировка
+    function applySorting(accList, type) {
+        let rule = sortRules[type];
+        if (rule === "nick") return [...accList].sort((a,b) => a.nick.localeCompare(b.nick));
+        if (rule === "cd") return [...accList].sort((a,b) => getRemainingMs(a) - getRemainingMs(b));
+        if (rule === "status") return [...accList].sort((a,b) => (getRemainingMs(a) === 0 ? -1 : 1) - (getRemainingMs(b) === 0 ? -1 : 1));
+        return accList;
+    }
+    
+    function matchesSearch(acc) { if (!searchQuery) return true; let q = searchQuery.toLowerCase(); return acc.nick.toLowerCase().includes(q) || (acc.email && acc.email.toLowerCase().includes(q)); }
+    function statusFilterMatch(acc) {
+        if (statusFilter === "available") return getRemainingMs(acc) === 0;
+        if (statusFilter === "cooldown") return getRemainingMs(acc) > 0;
+        return true;
+    }
+    
+    // Отрисовка таблиц
+    function renderTable(tbody, accList) {
+        tbody.innerHTML = "";
+        for (let acc of accList) {
+            let row = tbody.insertRow();
+            let remain = getRemainingMs(acc);
+            let onCd = remain > 0;
+            let warning = isWarning(acc);
+            let cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.checked = selectedIds.has(acc.id);
+            cb.onchange = (function(id) { return e => e.target.checked ? selectedIds.add(id) : selectedIds.delete(id); })(acc.id);
+            let tdCb = row.insertCell(0); tdCb.appendChild(cb); tdCb.style.textAlign = "center";
+            let tdNick = row.insertCell(1); tdNick.textContent = acc.nick; tdNick.className = "editable"; tdNick.onclick = () => editField(acc, "nick");
+            let tdEmail = row.insertCell(2); tdEmail.textContent = acc.email || "—"; tdEmail.className = "editable"; tdEmail.onclick = () => editField(acc, "email");
+            let tdStatus = row.insertCell(3);
+            if (onCd) tdStatus.innerHTML = warning ? `<span class="status-warning">⚠️ Скоро</span>` : `<span class="status-cooldown">⏳ На КД</span>`;
+            else tdStatus.innerHTML = `<span class="status-available">✅ Доступен</span>`;
+            let tdTimer = row.insertCell(4); tdTimer.className = "timer-cell";
+            if (onCd) { tdTimer.textContent = formatTime(remain); if (warning) tdTimer.style.color = "#f9a65a"; else tdTimer.style.color = "#d8b48c"; }
+            else tdTimer.textContent = "—";
+            let tdActions = row.insertCell(5); tdActions.className = "action-buttons";
+            let useBtn = document.createElement("button"); useBtn.textContent = "Использовать"; useBtn.className = "btn-small"; useBtn.disabled = onCd;
+            useBtn.onclick = () => useAccount(acc.id);
+            let resetBtn = document.createElement("button"); resetBtn.textContent = "Сброс КД"; resetBtn.className = "btn-small btn-reset";
+            resetBtn.onclick = () => resetCooldown(acc.id);
+            let delBtn = document.createElement("button"); delBtn.textContent = "Удалить"; delBtn.className = "btn-small btn-danger";
+            delBtn.onclick = () => deleteAccount(acc.id);
+            tdActions.append(useBtn, resetBtn, delBtn);
+        }
+    }
+    
+    // Отрисовка карточек для телефона
+    function renderCards() {
+        let allVisible = accounts.filter(a => matchesSearch(a) && statusFilterMatch(a));
+        let highList = allVisible.filter(a => a.type === "high");
+        let lowList = allVisible.filter(a => a.type === "low");
+        let combined = [...applySorting(highList, "high"), ...applySorting(lowList, "low")];
+        cardViewDiv.innerHTML = "";
+        for (let acc of combined) {
+            let remain = getRemainingMs(acc);
+            let onCd = remain > 0;
+            let warning = isWarning(acc);
+            let card = document.createElement("div");
+            card.className = "account-card";
+            let cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.className = "card-checkbox";
+            cb.checked = selectedIds.has(acc.id);
+            cb.onchange = (function(id) { return e => e.target.checked ? selectedIds.add(id) : selectedIds.delete(id); })(acc.id);
+            card.appendChild(cb);
+            card.innerHTML += `
+                <div class="card-header">
+                    <span class="card-nick">${escapeHtml(acc.nick)}</span>
+                    <span class="card-type">${acc.type === "high" ? "ХАЙ" : "ЛОУ"}</span>
+                </div>
+                <div class="card-email">${escapeHtml(acc.email || "—")}</div>
+                <div class="card-status">${onCd ? (warning ? "⚠️ Скоро" : "⏳ На КД") : "✅ Доступен"}</div>
+                <div class="card-timer">${onCd ? formatTime(remain) : "—"}</div>
+                <div class="card-actions">
+                    <button class="btn-small use-card" data-id="${acc.id}" ${onCd ? "disabled" : ""}>Использовать</button>
+                    <button class="btn-small btn-reset reset-card" data-id="${acc.id}">Сброс КД</button>
+                    <button class="btn-small btn-danger delete-card" data-id="${acc.id}">Удалить</button>
+                </div>
+            `;
+            cardViewDiv.appendChild(card);
+        }
+        // навесить обработчики на кнопки в карточках
+        document.querySelectorAll(".use-card").forEach(btn => btn.onclick = () => useAccount(btn.dataset.id));
+        document.querySelectorAll(".reset-card").forEach(btn => btn.onclick = () => resetCooldown(btn.dataset.id));
+        document.querySelectorAll(".delete-card").forEach(btn => btn.onclick = () => deleteAccount(btn.dataset.id));
+    }
+    
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    
+    function renderAll() {
+        let highList = accounts.filter(a => a.type === "high" && matchesSearch(a) && statusFilterMatch(a));
+        let lowList = accounts.filter(a => a.type === "low" && matchesSearch(a) && statusFilterMatch(a));
+        highList = applySorting(highList, "high");
+        lowList = applySorting(lowList, "low");
+        highCountSpan.textContent = highList.length;
+        lowCountSpan.textContent = lowList.length;
+        renderTable(highTbody, highList);
+        renderTable(lowTbody, lowList);
+        renderCards();
+        document.getElementById("highContent").style.display = collapsedSections.high ? "none" : "block";
+        document.getElementById("lowContent").style.display = collapsedSections.low ? "none" : "block";
+        updateSectionArrow("high", collapsedSections.high);
+        updateSectionArrow("low", collapsedSections.low);
+    }
+    
+    function updateSectionArrow(section, collapsed) {
+        let header = document.querySelector(`.section-header[data-section="${section}"] span:last-child`);
+        if (header) header.textContent = collapsed ? "▶" : "▼";
+    }
+    function toggleSection(section) { collapsedSections[section] = !collapsedSections[section]; renderAll(); }
+    
+    // Уведомления и звук
+    function playBeep() { if (!notificationsEnabled || soundMuted) return; try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 880; gain.gain.value = 0.2; osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1); osc.stop(audioCtx.currentTime + 1); } catch(e) {} }
+    function showNotification(title, body) { if (!notificationsEnabled) return; if (Notification.permission === "granted") new Notification(title, { body }); else if (Notification.permission !== "denied") Notification.requestPermission(); }
+    function checkCooldownsAndNotify() { let now = Date.now(); let changed = false; for (let acc of accounts) { if (acc.cooldownUntil && acc.cooldownUntil <= now && (!lastNotified[acc.id] || now - lastNotified[acc.id] > 60000)) { lastNotified[acc.id] = now; playBeep(); showNotification("КД закончился", `${acc.nick} (${acc.type === "high" ? "Хай" : "Лоу"}) готов!`); acc.cooldownUntil = null; changed = true; } } if (changed) { saveProfilesImmediate(); renderAll(); } }
+    setInterval(() => { checkCooldownsAndNotify(); renderAll(); }, 1000);
+    
+    // Планировщик
+    function setReminder() {
+        let minutes = parseInt(document.getElementById("reminderMinutes").value, 10);
+        let message = document.getElementById("reminderMessage").value.trim() || "Пора запустить сессию аккаунтов!";
+        if (isNaN(minutes) || minutes < 1) minutes = 30;
+        if (reminderTimeout) clearTimeout(reminderTimeout);
+        reminderTimeout = setTimeout(() => {
+            playBeep();
+            showNotification("Напоминание", message);
+            document.getElementById("reminderStatus").innerHTML = "Напоминание сработало!";
+        }, minutes * 60 * 1000);
+        document.getElementById("reminderStatus").innerHTML = `Напоминание установлено на ${minutes} минут(ы).`;
+        addLog("Планировщик", `Установлено напоминание через ${minutes} мин: ${message}`);
+    }
+    function clearReminder() {
+        if (reminderTimeout) clearTimeout(reminderTimeout);
+        reminderTimeout = null;
+        document.getElementById("reminderStatus").innerHTML = "Напоминание отменено.";
+        addLog("Планировщик", "Напоминание отменено");
+    }
+    
+    // Модальные окна
+    function openModal(id) { document.getElementById(id).style.display = "flex"; }
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    function closeAllModals() { document.querySelectorAll(".modal").forEach(m => m.style.display = "none"); }
+    
+    // Статистика (улучшенная)
+    function updateStatsModal() {
+        const H = accounts.filter(a => a.type === "high").length;
+        const L = accounts.filter(a => a.type === "low").length;
+        const trophiesPerWin = parseInt(document.getElementById("trophiesPerWin").value, 10) || 8;
+        const GAME_DURATION_MIN = 3;
+        const CYCLE_HOURS = 3;
+        const CYCLES_PER_DAY = 24 / CYCLE_HOURS; // 8
+        
+        const maxPairs = Math.floor(H / 2);
+        const maxLowQuads = Math.floor(L / 4);
+        let winsPerCycle = Math.min(maxPairs, maxLowQuads);
+        let canFarm = (H >= 2 && L >= 4);
+        if (!canFarm) winsPerCycle = 0;
+        
+        const seriesTimeMin = winsPerCycle * GAME_DURATION_MIN;
+        const intervalMinutes = winsPerCycle > 0 ? (CYCLE_HOURS * 60) / winsPerCycle : Infinity;
+        const winsPerDay = winsPerCycle * CYCLES_PER_DAY;
+        const trophiesPerDay = winsPerDay * trophiesPerWin;
+        const daysTo3k = winsPerDay > 0 ? Math.ceil(3000 / trophiesPerDay) : Infinity;
+        
+        let statsHtml = `<div class="form-row"><hr></div>`;
+        if (!canFarm) {
+            statsHtml += `<div class="warning-text"><b>⚠️ Недостаточно аккаунтов для фарма</b><br>Минимально необходимо: 2 хая и 4 лоу.</div>`;
+        } else {
+            statsHtml += `<p><b>✅ Минимальные требования выполнены</b> (${H} хаев, ${L} лоу)</p>`;
+        }
+        statsHtml += `<p><b>📊 Всего аккаунтов:</b> хаев ${H}, лоу ${L}</p>`;
+        if (winsPerCycle > 0) {
+            statsHtml += `<p><b>🚀 Максимум побед за 3 часа:</b> ${winsPerCycle}</p>`;
+            statsHtml += `<p><b>⏱️ Режим "серия":</b> ${winsPerCycle} побед подряд за ${seriesTimeMin} минут, затем перерыв ${CYCLE_HOURS} часа</p>`;
+            statsHtml += `<p><b>🔄 Режим "равномерно":</b> победа каждые ${intervalMinutes} минут</p>`;
+        } else {
+            statsHtml += `<p><b>⚠️ Побед за 3 часа:</b> 0 (недостаточно аккаунтов для одной полноценной игры)</p>`;
+        }
+        statsHtml += `<p><b>🏆 Побед за сутки (максимум):</b> ${winsPerDay}</p>`;
+        statsHtml += `<p><b>✨ Кубков за победу:</b> ${trophiesPerWin}</p>`;
+        statsHtml += `<p><b>🏅 Кубков за сутки:</b> ${trophiesPerDay}</p>`;
+        statsHtml += `<p><b>📅 Дней до 3000 кубков (3 прайм):</b> ${daysTo3k === Infinity ? "бесконечно" : daysTo3k}</p>`;
+        statsHtml += `<p><small>Расчёт основан на идеальной ротации аккаунтов без простоев. Каждая игра (поиск+матч) — 3 минуты.</small></p>`;
+        document.getElementById("statsContent").innerHTML = statsHtml;
+    }
+    
+    function updateHistoryModal() {
+        let html = "<ul style='margin:0; padding-left:20px;'>";
+        historyLog.slice(0, 100).forEach(log => { html += `<li><b>${log.time}</b> — ${log.action}: ${log.details}</li>`; });
+        html += "</ul>";
+        document.getElementById("historyContent").innerHTML = html;
+    }
+    
+    function updateCalendarModal() {
+        let now = Date.now();
+        let events = [];
+        for (let acc of accounts) if (acc.cooldownUntil && acc.cooldownUntil > now) events.push({ time: acc.cooldownUntil, nick: acc.nick, type: acc.type });
+        events.sort((a,b) => a.time - b.time);
+        let html = "<table style='width:100%;'><tr><th>Время</th><th>Аккаунт</th><th>Тип</th></tr>";
+        for (let e of events.slice(0, 30)) html += `<tr><td>${new Date(e.time).toLocaleString()}</td><td>${e.nick}</td><td>${e.type === "high" ? "Хай" : "Лоу"}</td></tr>`;
+        html += "</table>";
+        document.getElementById("calendarContent").innerHTML = html;
+    }
+    
+    // Массовое редактирование
+    function applySuffixToSelected() {
+        let suffix = document.getElementById("emailSuffix").value.trim();
+        if (!suffix) { alert("Введите суффикс"); return; }
+        let changed = false;
+        for (let id of selectedIds) {
+            let acc = accounts.find(a => a.id === id);
+            if (acc) { acc.email = (acc.email || "") + suffix; changed = true; }
+        }
+        if (changed) { saveCurrentProfile(); renderAll(); addLog("Массовое редактирование", `Добавлен суффикс "${suffix}" к ${selectedIds.size} аккам`); alert("Готово"); closeModal("massEditModal"); } else alert("Ничего не выбрано");
+    }
+    
+    function applyReplaceToSelected() {
+        let newEmail = document.getElementById("emailReplace").value.trim();
+        if (!newEmail) { alert("Введите новую почту"); return; }
+        let changed = false;
+        for (let id of selectedIds) {
+            let acc = accounts.find(a => a.id === id);
+            if (acc) { acc.email = newEmail; changed = true; }
+        }
+        if (changed) { saveCurrentProfile(); renderAll(); addLog("Массовое редактирование", `Почта заменена na "${newEmail}" для ${selectedIds.size} акков`); alert("Готово"); closeModal("massEditModal"); } else alert("Ничего не выбрано");
+    }
+    
+    // Импорт CSV
+    function importFromCsv(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            let text = e.target.result;
+            let rows = text.split(/\r?\n/);
+            if (rows.length < 2) { alert("Некорректный CSV"); return; }
+            let imported = [];
+            for (let i = 1; i < rows.length; i++) {
+                let cols = rows[i].split(",").map(c => c.replace(/"/g, '').trim());
+                if (cols.length < 2) continue;
+                let type = cols[0].toLowerCase().includes("high") ? "high" : "low";
+                let nick = cols[1];
+                let email = cols[2] || "";
+                if (nick) imported.push({ id: crypto.randomUUID(), type, nick, email, cooldownUntil: null });
+            }
+            if (imported.length) {
+                pushToUndo();
+                if (confirm(`Импортировано ${imported.length} аккаунтов. Добавить к текущим? (Отмена — заменить)`)) accounts.push(...imported);
+                else accounts = imported;
+                saveProfilesImmediate(); renderAll(); addLog("Импорт CSV", `Добавлено ${imported.length} акков`);
+                alert("Готово");
+            } else alert("Нет валидных данных");
+        };
+        reader.readAsText(file);
+    }
+    
+    // Сохранение HTML
+    function saveAsHtml() {
+        saveCurrentProfile();
+        localStorage.setItem("brawl_history", JSON.stringify(historyLog));
+        localStorage.setItem("brawl_sort_rules", JSON.stringify(sortRules));
+        localStorage.setItem("brawl_collapsed", JSON.stringify(collapsedSections));
+        localStorage.setItem("brawl_notifications", notificationsEnabled ? "1" : "0");
+        localStorage.setItem("brawl_sound_muted", soundMuted ? "1" : "0");
+        let htmlContent = document.documentElement.outerHTML;
+        let blob = new Blob([htmlContent], {type: "text/html"});
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `brawl_farm_${new Date().toISOString().slice(0,19)}.html`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        addLog("Сохранение HTML", "Файл сохранён со всеми данными");
+        alert("HTML-файл сохранён. При открытии восстановятся все аккаунты, история и настройки.");
+    }
+    
+    // Инициализация
+    function init() {
+        loadProfiles();
+        let savedSort = localStorage.getItem("brawl_sort_rules");
+        if (savedSort) sortRules = JSON.parse(savedSort);
+        let savedCollapsed = localStorage.getItem("brawl_collapsed");
+        if (savedCollapsed) collapsedSections = JSON.parse(savedCollapsed);
+        let notifFlag = localStorage.getItem("brawl_notifications");
+        if (notifFlag === "1") notificationsEnabled = true;
+        let soundMutedFlag = localStorage.getItem("brawl_sound_muted");
+        if (soundMutedFlag === "1") soundMuted = true;
+        muteCheckbox.checked = soundMuted;
+        updateProfileSelect();
+        renderAll();
+        addLog("Запуск", "Приложение загружено");
+        
+        // Обработчики
+        document.getElementById("openAddModalBtn").onclick = () => openModal("addModal");
+        document.getElementById("openMassAddModalBtn").onclick = () => openModal("massAddModal");
+        document.getElementById("addAccountBtn").onclick = addAccountFromModal;
+        document.getElementById("massAddBtn").onclick = massAddAccounts;
+        searchInput.oninput = (e) => { searchQuery = e.target.value; renderAll(); };
+        statusFilterSelect.onchange = (e) => { statusFilter = e.target.value; renderAll(); };
+        muteCheckbox.onchange = (e) => { soundMuted = e.target.checked; localStorage.setItem("brawl_sound_muted", soundMuted ? "1" : "0"); };
+        profileSelect.onchange = (e) => switchProfile(e.target.value);
+        document.getElementById("newProfileBtn").onclick = () => { let name = prompt("Название нового профиля"); if(name && !profiles[name]) { pushToUndo(); profiles[name] = []; saveProfilesImmediate(); updateProfileSelect(); } };
+        document.getElementById("delProfileBtn").onclick = () => { if(currentProfile !== "default" && confirm("Удалить текущий профиль?")) { pushToUndo(); delete profiles[currentProfile]; switchProfile("default"); } };
+        document.getElementById("exportJsonBtn").onclick = () => { let data = JSON.stringify(accounts, null, 2); let blob = new Blob([data], {type:"application/json"}); let a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`brawl_${currentProfile}.json`; a.click(); URL.revokeObjectURL(a.href); };
+        document.getElementById("importCsvBtn").onclick = () => document.getElementById("importFileInput").click();
+        document.getElementById("importFileInput").onchange = (e) => { if(e.target.files[0]) importFromCsv(e.target.files[0]); e.target.value=""; };
+        document.getElementById("backupBtn").onclick = manualBackup;
+        document.getElementById("saveHtmlBtn").onclick = saveAsHtml;
+        document.getElementById("massUseBtn").onclick = massUseSelected;
+        document.getElementById("massResetBtn").onclick = massResetSelected;
+        document.getElementById("selectAllBtn").onclick = selectAll;
+        document.getElementById("deselectAllBtn").onclick = deselectAll;
+        document.getElementById("deleteSelectedBtn").onclick = deleteSelected;
+        document.getElementById("enableNotificationsBtn").onclick = () => { notificationsEnabled = true; localStorage.setItem("brawl_notifications", "1"); if(Notification.permission !== "granted") Notification.requestPermission(); playBeep(); alert("Уведомления и звук включены (звук можно отключить чекбоксом)"); };
+        document.getElementById("openStatsBtn").onclick = () => { updateStatsModal(); openModal("statsModal"); };
+        document.getElementById("openHistoryBtn").onclick = () => { updateHistoryModal(); openModal("historyModal"); };
+        document.getElementById("openCalendarBtn").onclick = () => { updateCalendarModal(); openModal("calendarModal"); };
+        document.getElementById("openSortModalBtn").onclick = () => openModal("sortModal");
+        document.getElementById("openMassEditBtn").onclick = () => openModal("massEditModal");
+        document.getElementById("openSchedulerBtn").onclick = () => openModal("schedulerModal");
+        document.getElementById("setReminderBtn").onclick = setReminder;
+        document.getElementById("clearReminderBtn").onclick = clearReminder;
+        document.getElementById("applySortBtn").onclick = () => { sortRules.high = document.getElementById("sortHighSelect").value; sortRules.low = document.getElementById("sortLowSelect").value; localStorage.setItem("brawl_sort_rules", JSON.stringify(sortRules)); renderAll(); closeModal("sortModal"); addLog("Сортировка", `Хаи: ${sortRules.high}, Лоу: ${sortRules.low}`); };
+        document.getElementById("applySuffixBtn").onclick = applySuffixToSelected;
+        document.getElementById("applyReplaceBtn").onclick = applyReplaceToSelected;
+        document.getElementById("undoBtn").onclick = undo;
+        document.getElementById("redoBtn").onclick = redo;
+        
+        document.querySelectorAll(".close-modal").forEach(el => { el.onclick = () => closeModal(el.getAttribute("data-modal")); });
+        document.querySelectorAll("[data-modal]").forEach(el => { if (el.classList.contains("close-modal") || el.innerText === "Отмена") el.onclick = () => closeModal(el.getAttribute("data-modal")); });
+        window.onclick = (e) => { if (e.target.classList && e.target.classList.contains("modal")) closeAllModals(); };
+        document.querySelectorAll(".section-header").forEach(h => { h.addEventListener("click", (e) => { let sec = h.getAttribute("data-section"); if(sec) toggleSection(sec); }); });
+        
+        window.addEventListener("keydown", (e) => {
+            if(e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+            if(e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+            if(e.ctrlKey && e.key === 'f') { e.preventDefault(); searchInput.focus(); }
+            if(e.ctrlKey && e.key === 'n') { e.preventDefault(); openModal("addModal"); }
+            if(e.ctrlKey && e.key === 'e') { e.preventDefault(); document.getElementById("exportJsonBtn").click(); }
+            if(e.ctrlKey && e.key === 'i') { e.preventDefault(); document.getElementById("importCsvBtn").click(); }
+            if(e.key === 'F1') { e.preventDefault(); alert("Горячие клавиши:\nCtrl+Z — отменить\nCtrl+Y — повторить\nCtrl+F — поиск\nCtrl+N — добавить аккаунт\nCtrl+E — экспорт JSON\nCtrl+I — импорт CSV\nF1 — справка"); }
+        });
+    }
+    
+    init();
+</script>
+</body>
+</html>
